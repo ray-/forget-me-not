@@ -94,8 +94,27 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
     
 }
 
+- (void)locationManager:(CLLocationManager *)manager monitoringDidFailForRegion:(CLRegion *)region withError:(NSError *)error {
+    NSLog(@"Failed monitoring region: %@", error);
+}
 
-#pragma mark - UITableViewDataSource 
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
+    NSLog(@"Location manager failed: %@", error);
+}
+
+- (void)locationManager:(CLLocationManager *)manager
+        didRangeBeacons:(NSArray *)beacons
+               inRegion:(CLBeaconRegion *) region {
+    for (CLBeacon * beacon in beacons) {
+        for (RWTItem *item in self.items) {
+            if ([item isEqualToCLBeacon:beacon]) {
+                item.lastSeenBeacon = beacon;
+            }
+        }
+    }
+}
+
+#pragma mark - UITableViewDataSource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.items.count;

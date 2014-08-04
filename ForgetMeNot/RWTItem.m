@@ -56,4 +56,10 @@ static NSString * const kRWTItemMinorValueKey = @"minor";
     [aCoder encodeObject:[NSNumber numberWithUnsignedInteger:self.minorValue] forKey:kRWTItemMinorValueKey];
 }
 
+- (BOOL)isEqualToCLBeacon:(CLBeacon *)beacon {
+    return ([[beacon.proximityUUID UUIDString] isEqualToString:[self.uuid UUIDString]] &&
+            [beacon.major isEqual: @(self.majorValue)] &&
+            [beacon.minor isEqual: @(self.minorValue)]);
+}
+
 @end
