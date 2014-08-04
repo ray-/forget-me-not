@@ -11,12 +11,15 @@
 #import "RWTItem.h"
 #import "RWTItemCell.h"
 
+@import CoreLocation;
+
 static NSString * const kRWTStoredItemsKey = @"storedItems";
 
-@interface RWTItemsViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface RWTItemsViewController () <UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate>
 
 @property (weak, nonatomic) IBOutlet UITableView *itemsTableView;
 @property (strong, nonatomic) NSMutableArray *items;
+@property (strong, nonatomic) CLLocationManager *locationManager;
 
 @end
 
@@ -24,6 +27,9 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.locationManager = [[CLLocationManager alloc] init];
+    self.locationManager.delegate = self;
 
     [self loadItems];
 }
@@ -39,6 +45,7 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
             [self.itemsTableView insertRowsAtIndexPaths:@[newIndexPath]
                                        withRowAnimation:UITableViewRowAnimationAutomatic];
             [self.itemsTableView endUpdates];
+            [self startMonitoringItem:newItem];
             [self persistItems];
         }];
     }
@@ -52,6 +59,7 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
         for (NSData *itemData in storedItems) {
             RWTItem *item = [NSKeyedUnarchiver unarchiveObjectWithData:itemData];
             [self.items addObject:item];
+            [self startMonitoringItem:item];
         }
     }
 }
@@ -63,6 +71,27 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
         [itemsDataArray addObject:itemData];
     }
     [[NSUserDefaults standardUserDefaults] setObject:itemsDataArray forKey:kRWTStoredItemsKey];
+}
+
+- (CLBeaconRegion *)beaconRegionWithItem:(RWTItem *)item {
+    CLBeaconRegion *beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:item.uuid
+                                                                           major:item.majorValue
+                                                                           minor:item.minorValue
+                                                                      identifier:item.name];
+    return beaconRegion;
+}
+
+- (void)startMonitoringItem:(RWTItem *)item {
+    CLBeaconRegion *beaconRegion = [self beaconRegionWithItem:item];
+    [self.locationManager startMonitoringForRegion:beaconRegion];
+    [self.locationManager startRangingBeaconsInRegion:beaconRegion];
+}
+
+- (void)stopMonitoringItem:(RWTItem *)item {
+    CLBeaconRegion *beaconRegion = [self beaconRegionWithItem:item];
+    [self.locationManager stopMonitoringForRegion:beaconRegion];
+    [self.locationManager stopRangingBeaconsInRegion:beaconRegion];
+    
 }
 
 
@@ -86,6 +115,8 @@ static NSString * const kRWTStoredItemsKey = @"storedItems";
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
+        RWTItem *itemToRemove = [self.items objectAtIndex:indexPath.row];
+        [self stopMonitoringItem:itemToRemove];
         [tableView beginUpdates];
         [self.items removeObjectAtIndex:indexPath.row];
         [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];

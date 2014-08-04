@@ -8,17 +8,19 @@
 
 #import <Foundation/Foundation.h>
 
+@import CoreLocation;
+
 @interface RWTItem : NSObject <NSCoding>
 
 @property (strong, nonatomic, readonly) NSString *name;
 @property (strong, nonatomic, readonly) NSUUID *uuid;
-@property (assign, nonatomic, readonly) uint16_t majorValue;
-@property (assign, nonatomic, readonly) uint16_t minorValue;
+@property (assign, nonatomic, readonly) CLBeaconMajorValue majorValue;
+@property (assign, nonatomic, readonly) CLBeaconMinorValue minorValue;
 
 - (instancetype)initWithName:(NSString *)name
                         uuid:(NSUUID *)uuid
-                       major:(uint16_t)major
-                       minor:(uint16_t)minor;
+                       major:(CLBeaconMajorValue)major
+                       minor:(CLBeaconMinorValue)minor;
 
 
 @end

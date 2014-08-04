@@ -17,8 +17,8 @@ static NSString * const kRWTItemMinorValueKey = @"minor";
 
 - (instancetype)initWithName:(NSString *)name
                         uuid:(NSUUID *)uuid
-                       major:(uint16_t)major
-                       minor:(uint16_t)minor
+                       major:(CLBeaconMajorValue)major
+                       minor:(CLBeaconMinorValue)minor
 {
     self = [super init];
     if (!self) {
